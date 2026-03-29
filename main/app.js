@@ -112,3 +112,11 @@ async function deleteTask(id) {
 
 // Initial Date
 document.getElementById('header-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+// Add this to the start of your dashboard script
+_sb.auth.onAuthStateChange((event, session) => {
+    if (!session && event !== 'INITIAL_SESSION') {
+        window.location.href = 'login.html';
+    } else if (session) {
+        renderDeadlines(); // Your existing function to load data
+    }
+});
