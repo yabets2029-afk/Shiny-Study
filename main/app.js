@@ -1,84 +1,110 @@
-// 1. CONFIGURATION - Replace with your keys from Supabase
+// 1. PROJECT CONFIGURATION
 const SUPABASE_URL = 'https://zdahbfsojemtyhsbpcji.supabase.co/';
 const SUPABASE_KEY = 'sb_publishable_YO03kzP1YH9r_Bv3m5_9ng_dnBYt6Sx';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let isSignUp = true;
 
 // 2. AUTHENTICATION LOGIC
-async function handleSignUp() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { error } = await _supabase.auth.signUp({ email, password });
-    if (error) alert(error.message);
-    else alert("Check your email for the confirmation link!");
+function toggleAuthMode() {
+    isSignUp = !isSignUp;
+    document.getElementById('auth-title').innerText = isSignUp ? "Create Account" : "Welcome Back";
+    document.getElementById('confirm-password').classList.toggle('hidden');
+    document.getElementById('auth-main-btn').innerText = isSignUp ? "Create Account" : "Login";
+    document.getElementById('auth-toggle-btn').innerText = isSignUp ? "Already have an account? Login" : "New here? Create Account";
 }
 
-async function handleLogin() {
+async function handleAuthAction() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const { error } = await _supabase.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
-    else location.reload(); // Refresh to show dashboard
+    const confirm = document.getElementById('confirm-password').value;
+
+    if (!email || !password) return alert("Fill all fields.");
+
+    if (isSignUp) {
+        if (password !== confirm) return alert("Passwords do not match.");
+        const { error } = await _sb.auth.signUp({ email, password });
+        if (error) alert(error.message);
+        else alert("Account created! Check your email.");
+    } else {
+        const { error } = await _sb.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message);
+        else location.reload();
+    }
 }
 
 async function handleLogout() {
-    await _supabase.auth.signOut();
+    await _sb.auth.signOut();
     location.reload();
 }
 
-// Check if user is logged in on page load
-_supabase.auth.onAuthStateChange((event, session) => {
+// Session Observer
+_sb.auth.onAuthStateChange((event, session) => {
     if (session) {
         document.getElementById('auth-overlay').classList.add('hidden');
-        document.getElementById('user-display').innerText = `Tracking for: ${session.user.email}`;
-        loadDeadlines();
+        renderDeadlines();
     }
 });
 
-// 3. DEADLINE LOGIC
-function showAddModal() { document.getElementById('add-modal').classList.remove('hidden'); }
-function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); }
+// 3. DEADLINE MANAGEMENT
+function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
-async function submitDeadline() {
-    const { data: { user } } = await _supabase.auth.getUser();
+async function saveNewDeadline() {
+    const { data: { user } } = await _sb.auth.getUser();
     const title = document.getElementById('task-title').value;
     const subject = document.getElementById('task-subject').value;
-    const date = document.getElementById('task-date').value;
+    const due_date = document.getElementById('task-date').value;
 
-    const { error } = await _supabase.from('deadlines').insert([
-        { title, subject, due_date: date, user_id: user.id }
-    ]);
+    if (!title || !due_date) return alert("Project name and date are required.");
+
+    const { error } = await _sb.from('deadlines').insert([{ 
+        title, subject, due_date, user_id: user.id 
+    }]);
 
     if (error) alert(error.message);
     else {
-        closeAddModal();
-        loadDeadlines();
+        closeModal();
+        renderDeadlines();
     }
 }
 
-async function loadDeadlines() {
-    const { data, error } = await _supabase
-        .from('deadlines')
-        .select('*')
-        .order('due_date', { ascending: true });
-
-    const list = document.getElementById('deadline-list');
+async function renderDeadlines() {
+    const { data, error } = await _sb.from('deadlines').select('*').order('due_date', { ascending: true });
+    const container = document.getElementById('deadline-container');
+    
     if (data && data.length > 0) {
-        list.innerHTML = data.map(item => `
-            <div class="bg-white p-5 rounded-2xl border-l-4 border-blue-400 shadow-sm flex justify-between items-center">
-                <div>
-                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">${new Date(item.due_date).toLocaleDateString()}</span>
-                    <h3 class="font-bold text-lg">${item.title}</h3>
-                    <p class="text-sm text-slate-500">${item.subject}</p>
+        container.innerHTML = data.map(item => {
+            const date = new Date(item.due_date);
+            const isUrgent = (date - new Date()) < 86400000; // < 24 hours
+            const borderCol = isUrgent ? 'border-orange-500' : 'border-blue-500';
+
+            return `
+                <div class="bg-white p-6 rounded-3xl border-l-8 ${borderCol} shadow-sm group hover:shadow-xl transition-all">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">${date.toLocaleDateString()} @ ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            <h3 class="text-xl font-bold mt-1 text-slate-800">${item.title}</h3>
+                            <p class="text-sm font-medium text-blue-500">${item.subject || 'General'}</p>
+                        </div>
+                        <button onclick="deleteTask('${item.id}')" class="p-2 text-slate-200 hover:text-red-500 transition-colors">
+                            <span class="material-icons-round">delete</span>
+                        </button>
+                    </div>
                 </div>
-                <button onclick="deleteDeadline('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                    <span class="material-icons-round">delete</span>
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+    } else {
+        container.innerHTML = `<div class="col-span-full text-center py-20 text-slate-400 font-medium">Your schedule is clear. Enjoy the focus.</div>`;
     }
 }
 
-async function deleteDeadline(id) {
-    await _supabase.from('deadlines').delete().eq('id', id);
-    loadDeadlines();
+async function deleteTask(id) {
+    if(confirm("Mark this objective as complete/removed?")) {
+        await _sb.from('deadlines').delete().eq('id', id);
+        renderDeadlines();
+    }
 }
+
+// Set Date
+document.getElementById('date-now').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
