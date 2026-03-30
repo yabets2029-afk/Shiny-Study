@@ -1,10 +1,37 @@
-body{
-    font-family: 'Arial', sans-serif;
-    background-color: #F3F4F6;
-    margin: 0;
-    padding: 20px;
+:root {
+    --primary: #1e272e;
+    --accent: #3498db;
+    --bg: #f1f2f6;
+    --critical: #ff4757;
+    --soon: #ffa502;
+    --safe: #2ed573;
 }
-h1{
-    color: #;
-    text-align: center;
+
+body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #2f3542; }
+header { background: var(--primary); color: white; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; }
+
+.container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+.hidden { display: none !important; }
+
+.card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+.form-group input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; }
+
+button { cursor: pointer; border: none; border-radius: 6px; transition: 0.3s; font-weight: 600; }
+.btn-primary { background: var(--accent); color: white; width: 100%; padding: 12px; margin-top: 10px; }
+.btn-secondary { background: transparent; color: var(--accent); width: 100%; padding: 10px; margin-top: 5px; }
+.btn-add { background: var(--safe); color: white; padding: 8px 16px; }
+
+/* Deadline Task Styling */
+.task-item {
+    background: white; padding: 1rem; margin-bottom: 10px;
+    border-radius: 8px; display: flex; justify-content: space-between;
+    align-items: center; border-left: 6px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+.task-item.critical { border-left-color: var(--critical); }
+.task-item.soon { border-left-color: var(--soon); }
+.task-item.safe { border-left-color: var(--safe); }
+
+.btn-done { color: #a4b0be; background: none; font-size: 0.9rem; }
+.btn-done:hover { color: var(--critical); }
