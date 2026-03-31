@@ -1,140 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deadline Defender</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Classic Tasks</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- AUTHENTICATION SECTION -->
-    <div id="auth-container">
-        <header class="auth-header">
-            <h1 class="logo">Deadline Defender</h1>
-            <div id="auth-toggle-links">
-                <button onclick="showAuthPage('login')" class="btn-text">Login</button>
-                <button onclick="showAuthPage('signup')" class="btn-text">Sign Up</button>
-            </div>
-        </header>
-
-        <!-- Sign Up Screen -->
-        <section id="signup-screen" class="auth-card hidden">
-            <h2>Create Account</h2>
-            <p>Join students managing deadlines efficiently.</p>
-            <form id="signup-form">
-                <input type="text" id="signup-name" placeholder="Full Name" required>
-                <input type="email" id="signup-email" placeholder="Email" required>
-                <input type="password" id="signup-password" placeholder="Password" required>
-                <button type="submit" class="btn-primary">Create Account</button>
-            </form>
-            <p class="switch-auth">Already have an account? <a href="#" onclick="showAuthPage('login')">Login</a></p>
-        </section>
-
-        <!-- Login Screen -->
-        <section id="login-screen" class="auth-card">
-            <h2>Welcome Back</h2>
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email" required>
-                <input type="password" id="login-password" placeholder="Password" required>
-                <button type="submit" class="btn-primary">Login</button>
-            </form>
-            <p class="switch-auth">Don't have an account? <a href="#" onclick="showAuthPage('signup')">Sign Up</a></p>
-        </section>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="brand">Classic Tasks</h1>
+      <nav>
+        <button id="logoutBtn" class="btn ghost">Logout</button>
+      </nav>
     </div>
+  </header>
 
-    <!-- MAIN APPLICATION (Hidden until Login) -->
-    <div id="main-app" class="hidden">
-        <nav class="sidebar">
-            <div class="logo-area">
-                <h3>DD</h3>
-            </div>
-            <ul class="nav-links">
-                <li onclick="navigateTo('dashboard')">Dashboard</li>
-                <li onclick="navigateTo('deadlines')">Deadlines</li>
-                <li onclick="navigateTo('analytics')">Analytics</li>
-                <li onclick="navigateTo('settings')">Settings</li>
-            </ul>
-            <button id="logout-btn" class="btn-secondary">Logout</button>
-        </nav>
-
-        <main class="content-area">
-            <!-- Dashboard Section -->
-            <section id="dashboard" class="page">
-                <header class="section-header">
-                    <h1>Today's Overview</h1>
-                    <button class="btn-primary" onclick="openModal()">+ Add Deadline</button>
-                </header>
-                
-                <div class="dashboard-grid">
-                    <div class="card" id="today-deadlines-container">
-                        <h3>Today's Deadlines</h3>
-                        <ul id="today-list" class="deadline-list"></ul>
-                    </div>
-                    <div class="card">
-                        <h3>Calendar (Monthly)</h3>
-                        <div id="calendar-placeholder">Calendar view coming soon...</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Deadlines List Section -->
-            <section id="deadlines" class="page hidden">
-                <h1>All Deadlines</h1>
-                <div id="all-deadlines-list" class="deadline-list"></div>
-            </section>
-
-            <!-- Analytics Section -->
-            <section id="analytics" class="page hidden">
-                <h1>Analytics & Insights</h1>
-                <div class="analytics-grid">
-                    <div class="card stat-card">
-                        <h2 id="stat-completed">0</h2>
-                        <p>Completed Tasks</p>
-                    </div>
-                    <div class="card stat-card">
-                        <h2 id="stat-missed">0</h2>
-                        <p>Total Tasks</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Settings Section -->
-            <section id="settings" class="page hidden">
-                <h1>Settings</h1>
-                <div class="card">
-                    <h3>Account Info</h3>
-                    <p id="user-display-email"></p>
-                    <hr>
-                    <h3>Preferences</h3>
-                    <label><input type="checkbox"> Dark Mode</label>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- ADD DEADLINE MODAL -->
-    <div id="modal-overlay" class="hidden">
-        <div class="modal">
-            <h2>Add New Deadline</h2>
-            <form id="deadline-form">
-                <input type="text" id="task-title" placeholder="Assignment Name" required>
-                <select id="task-type">
-                    <option value="Assignment">Assignment</option>
-                    <option value="Exam">Exam</option>
-                    <option value="Project">Project</option>
-                </select>
-                <input type="datetime-local" id="task-date" required>
-                <div class="modal-buttons">
-                    <button type="button" class="btn-text" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Deadline</button>
-                </div>
-            </form>
+  <main class="container main-grid">
+    <section class="panel form-panel">
+      <h2>Create Task</h2>
+      <form id="taskForm" class="task-form" onsubmit="event.preventDefault(); addTask();">
+        <label>Topic<input id="topic" required></label>
+        <label>Subject<input id="subject"></label>
+        <label>Teacher<input id="teacher"></label>
+        <label>Date and Time<input id="dateTime" type="datetime-local" required></label>
+        <label>Estimated Time (mins)<input id="estimatedTime" type="number" min="1"></label>
+        <label>Difficulty
+          <input id="difficulty" type="range" min="1" max="5" value="3">
+        </label>
+        <label>Priority
+          <select id="priority">
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+          </select>
+        </label>
+        <label>Task Type<input id="taskType"></label>
+        <label>Description<textarea id="description" rows="4"></textarea></label>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Add Task</button>
+          <button class="btn" type="button" onclick="clearForm()">Clear</button>
         </div>
-    </div>
+      </form>
+    </section>
 
-    <script src="script.js"></script>
+    <section class="panel list-panel">
+      <h2>Your Tasks</h2>
+      <div id="taskList" class="task-list"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>Classic Tasks — friendly task manager</small>
+    </div>
+  </footer>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
